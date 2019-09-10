@@ -8,20 +8,18 @@ namespace XmlConsoleApplication
     {
         public string ConvertXmlToString(string path)
         {
-            string textXML = File.ReadAllText(path);
-            XElement rootElement = XDocument.Parse(textXML).Root;
-            string customerXml = rootElement.ToString();
-            return customerXml;
+
+            string textXML = File.ReadAllText(path);            
+            return textXML;
         }
 
         public void CreateBackupFile(string path,string file)
-        {  
-            
-            string fileName = "(" + DateTime.Now.ToString("yyyy’-‘MM’-‘dd’T’HH’:’mm’:’ss") + ")" + "CustomerBackup"  + ".xml";
+        {
+            string dateTime = long.Parse(DateTime.Now.ToString("yyyyMMddHHmmss")).ToString();
+            //string fileName =dateTime + "CustomerBackup.xml";
+            string fileName = dateTime + "UserBackup.xml";
             string fullPath = path + fileName;
-            File.WriteAllText(fullPath, file);
-            string readText = File.ReadAllText(fullPath);
-            Console.WriteLine(readText);
+            File.WriteAllText(fullPath, file);           
         }
     }
 }

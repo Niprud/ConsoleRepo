@@ -2,6 +2,8 @@
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
+using System.Xml;
 
 namespace XmlConsoleApplication
 {
@@ -9,29 +11,57 @@ namespace XmlConsoleApplication
     {
         static void Main(string[] args)
         {
+
             string myConnectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString;
-            string path = ConfigurationManager.AppSettings["DirectoryPath"].ToString();
-            string backupPath = ConfigurationManager.AppSettings["BackupPath"].ToString();
+            string currentfilepath = ConfigurationManager.AppSettings["DirectoryPath"].ToString();
+            string backupfilePath = ConfigurationManager.AppSettings["BackupPath"].ToString();
+
+            try
+            {
+                while (true)
+                {
+                    if (File.Exists(currentfilepath))
+                    {
+                        XmlService xmlService = new XmlService();
+                        //string convertedXml = xmlService.ConvertXmlToString(currentfilepath);
+                        XmlTextReader xmlreader = new XmlTextReader(currentfilepath);
+                        DataSet ds = new DataSet();
+                        ds.ReadXml(xmlreader);
+                        xmlreader.Close();
+
+                        SqlConnection con = new SqlConnection(myConnectionString);
+
+                        //SqlCommand cmd = new SqlCommand("spCustomerXmlData", con);
+
+                        SqlCommand cmd = new SqlCommand("spUserXmlData", con);
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.Add("@UserXmlData", SqlDbType.Xml).Value = ds.GetXml();
+
+                        //cmd.Parameters.AddWithValue("@CustomerXmlData", convertedXml);
+                        //cmd.Parameters.AddWithValue("@UserXmlData", convertedXml);
 
 
-            XmlService xmlService = new XmlService();
-            string convertedXml = xmlService.ConvertXmlToString(path);
-            xmlService.CreateBackupFile(backupPath, convertedXml);
+                        con.Open();
 
-            SqlConnection con = new SqlConnection(myConnectionString);
+                        cmd.ExecuteNonQuery();
 
-            SqlCommand cmd = new SqlCommand("spAddCustomer", con);
-            cmd.CommandType = CommandType.StoredProcedure;
+                        con.Close();
 
-            SqlParameter param = cmd.Parameters.Add("@xmlText", SqlDbType.NVarChar);
-            param.Value = convertedXml;
+                        xmlService.CreateBackupFile(backupfilePath, xmlreader.ToString());
+                        File.Delete(currentfilepath);
+                        Console.WriteLine("New record added successfully || " + DateTime.Now.ToString("dddd, dd MMMM yyyy"));
+                        
+                    }
 
-            con.Open();
+                }
+            }
+            catch (Exception ex)
+            {
 
-            cmd.ExecuteNonQuery();
-
-            con.Close();
-
+                Console.WriteLine(ex.Message);
+                Console.ReadLine();
+            }
         }
     }
 }

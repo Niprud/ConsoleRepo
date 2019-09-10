@@ -98,3 +98,7 @@ namespace XmlConsoleApplication
 
 
 //  SqlDataReader reader;
+
+
+//string readText = File.ReadAllText(fullPath);
+//Console.WriteLine(readText);
